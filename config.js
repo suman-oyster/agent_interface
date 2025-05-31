@@ -1,6 +1,6 @@
 const CONFIG = {
     // Same API URL as HQ portal
-    API_URL: 'https://script.google.com/macros/s/AKfycbwJHbEFbNub9Pk_NjvHQ-7fTTWEU3f9NeJd7hw1THSd_6QRS5oShSmUMY6hTILrDOPZ/exec',
+    API_URL: 'https://script.google.com/macros/s/AKfycbxPXL5nZxBSI3yGnSTGoPnl1oNKpm3Eo37SqPQGgVzUQ-JtZWg8WSkWjneNypY0vz0/exec',
     
     // Same password as HQ
     PASSWORD: 'oysterHQ2025',
