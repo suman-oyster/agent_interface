@@ -139,4 +139,3 @@ const UTILS = {
         return Math.abs(hash).toString();
     }
 };
-};
