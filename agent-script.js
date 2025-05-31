@@ -120,6 +120,11 @@ class AgentPortalApp {
     }
     
     async loadData() {
+        const refreshBtn = document.getElementById('refresh-btn');
+            if (refreshBtn) {
+                refreshBtn.classList.add('loading');
+                refreshBtn.disabled = true;
+        }
         try {
             this.showLoading(true);
             
@@ -149,6 +154,9 @@ class AgentPortalApp {
             UTILS.showToast('Failed to load data. Showing cached data.', 'error');
         } finally {
             this.showLoading(false);
+            if (refreshBtn) {
+            refreshBtn.classList.remove('loading');
+            refreshBtn.disabled = false;
         }
     }
     
@@ -410,8 +418,11 @@ class AgentPortalApp {
     
     // Form Submission
     async submitQuestion() {
+        UTILS.showToast('Submitting question...', 'info');
         const form = document.getElementById('question-form');
         const formData = new FormData(form);
+        const submitBtn = document.querySelector('#question-form button[type="submit"]');
+        const originalText = submitBtn.textContent;
         
         const questionData = {
             property: document.getElementById('property').value.trim(),
@@ -427,6 +438,10 @@ class AgentPortalApp {
             UTILS.showToast('Please fill in all required fields', 'error');
             return;
         }
+
+        submitBtn.classList.add('loading');
+        submitBtn.textContent = 'Submitting...';
+        submitBtn.disabled = true;
         
         try {
             const response = await fetch(CONFIG.API_URL, {
@@ -453,18 +468,28 @@ class AgentPortalApp {
         } catch (error) {
             console.error('Error submitting question:', error);
             UTILS.showToast('Failed to submit question', 'error');
+        } finally {
+            // Reset button state
+            submitBtn.classList.remove('loading');
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
         }
     }
     
     async submitThreadResponse() {
         if (!this.currentQuestion) return;
-        
+        UTILS.showToast('Submitting question...', 'info');
         const responseText = document.getElementById('thread-response').value.trim();
+        const submitBtn = document.getElementById('submit-response-btn');
+        const originalText = submitBtn.textContent;
         
         if (!responseText) {
             UTILS.showToast('Please enter a response', 'error');
             return;
         }
+        submitBtn.classList.add('loading');
+        submitBtn.textContent = 'Sending...';
+        submitBtn.disabled = true;
         
         try {
             const response = await fetch(CONFIG.API_URL, {
@@ -493,6 +518,11 @@ class AgentPortalApp {
         } catch (error) {
             console.error('Error sending response:', error);
             UTILS.showToast('Failed to send response', 'error');
+        } finally {
+            // Reset button state
+            submitBtn.classList.remove('loading');
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
         }
     }
     
