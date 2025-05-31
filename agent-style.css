@@ -560,6 +560,10 @@ body {
     background: #e74c3c;
 }
 
+.toast.info {
+    background: #3498db;
+}
+
 .toast-close {
     background: none;
     border: none;
