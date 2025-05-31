@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oyster Agent Portal - Questions</title>
+<link rel="stylesheet" href="agent-style.css">
+<script src="../config.js"></script>
+<script src="agent-script.js"></script>
+</head>
+<body>
+  <!-- Login Screen -->
+  <div id="login-screen" class="screen">
+      <div class="login-container">
+          <div class="logo">
+              🏠 <span>Agent Portal</span>
+          </div>
+          <h1>Oyster Properties</h1>
+          <form id="login-form">
+              <div class="form-group">
+                  <label for="password">Password:</label>
+                  <input type="password" id="password" required>
+              </div>
+              <button type="submit" class="btn btn-primary">Enter</button>
+          </form>
+          <div id="login-error" class="error-message" style="display: none;">
+              Incorrect password. Please try again.
+          </div>
+      </div>
+  </div>
+  
+  <!-- User Selection Screen -->
+  <div id="user-selection-screen" class="screen" style="display: none;">
+      <div class="login-container">
+          <div class="logo">
+              🏠 <span>Agent Portal</span>
+          </div>
+          <h2>Welcome!</h2>
+          <p style="color: #7f8c8d; margin-bottom: 25px;">Please select your name to continue</p>
+          <div id="user-buttons"></div>
+      </div>
+  </div>
+  
+  <!-- Main App Screen -->
+  <div id="app-screen" class="screen" style="display: none;">
+      <!-- Header -->
+      <header class="app-header">
+          <div class="header-content">
+              <h1>🏠 Oyster Agent Portal</h1>
+              <div class="header-controls">
+                  <button id="refresh-btn" class="btn-icon" title="Refresh">🔄</button>
+                  <button id="logout-btn" class="btn-icon" title="Logout">🚪</button>
+              </div>
+          </div>
+          <div class="stats-bar">
+              <div class="stat">
+                  <span class="stat-number" id="my-questions-count">0</span>
+                  <span class="stat-label">My Questions</span>
+              </div>
+              <div class="stat">
+                  <span class="stat-number" id="pending-count">0</span>
+                  <span class="stat-label">Pending</span>
+              </div>
+              <div class="stat">
+                  <span class="stat-number" id="answered-count">0</span>
+                  <span class="stat-label">Answered</span>
+              </div>
+              <div class="stat">
+                  <span class="stat-number" id="last-updated">--:--</span>
+                  <span class="stat-label">Updated</span>
+              </div>
+          </div>
+      </header>
+  
+      <!-- Main Layout -->
+      <div class="main-layout">
+          <!-- Questions Section -->
+          <div class="questions-section">
+              <div class="section-header">
+                  <h2 class="section-title">📋 Questions & Responses</h2>
+                  <p style="color: #7f8c8d; font-size: 14px;">View your submitted questions and respond to HQ follow-ups</p>
+                  
+                  <div class="filter-tabs">
+                      <button class="filter-tab active" data-filter="all">All</button>
+                      <button class="filter-tab" data-filter="my-questions">My Questions</button>
+                      <button class="filter-tab" data-filter="pending">Pending Response</button>
+                      <button class="filter-tab" data-filter="answered">Answered</button>
+                  </div>
+              </div>
+              
+              <div class="questions-list">
+                  <div class="loading" id="loading">
+                      <div class="spinner"></div>
+                      <p>Loading questions...</p>
+                  </div>
+                  
+                  <div id="no-questions" class="empty-state" style="display: none;">
+                      <div class="empty-icon">✅</div>
+                      <h3>No questions found</h3>
+                      <p>Submit your first question using the form on the right!</p>
+                  </div>
+                  
+                  <div id="questions-content"></div>
+              </div>
+          </div>
+  
+          <!-- Form Section -->
+          <div class="form-section">
+              <h2>❓ Ask a Question</h2>
+              
+              <form id="question-form">
+                  <div class="form-grid">
+                      <div class="form-group">
+                          <label for="property">Property Address *</label>
+                          <input type="text" id="property" required placeholder="e.g., 123 Main Street, London">
+                      </div>
+                      
+                      <div class="form-group">
+                          <label for="fixflo-id">Fixflo ID</label>
+                          <input type="text" id="fixflo-id" placeholder="Optional">
+                      </div>
+                      
+                      <div class="form-group">
+                          <label for="priority">Priority *</label>
+                          <select id="priority" required>
+                              <option value="">Select priority...</option>
+                              <option value="P0">🚨 P0 - Emergency</option>
+                              <option value="P1">🟠 P1 - Urgent</option>
+                              <option value="P2">🟡 P2 - High</option>
+                              <option value="P3">🟢 P3 - Standard</option>
+                              <option value="P4">⚪ P4 - Low</option>
+                          </select>
+                      </div>
+                      
+                      <div class="form-group">
+                          <label for="directed-to">Direct to *</label>
+                          <select id="directed-to" required>
+                              <option value="">Select team member...</option>
+                              <option value="Anyone">Anyone Available</option>
+                          </select>
+                      </div>
+                  </div>
+                  
+                  <div class="form-group full-width">
+                      <label for="question">Question *</label>
+                      <textarea id="question" required placeholder="Please describe your question in detail..."></textarea>
+                  </div>
+                  
+                  <button type="submit" class="btn btn-primary">Submit Question</button>
+                  <button type="button" id="clear-form" class="btn btn-secondary">Clear Form</button>
+              </form>
+          </div>
+      </div>
+  </div>
+  
+  <!-- Question Detail Modal -->
+  <div id="question-modal" class="modal" style="display: none;">
+      <div class="modal-content">
+          <div class="modal-header">
+              <h2 id="modal-title">Question Details</h2>
+              <button class="modal-close">&times;</button>
+          </div>
+          
+          <div class="modal-body">
+              <div id="question-details"></div>
+              
+              <!-- Thread Section -->
+              <div id="thread-section">
+                  <h3>💬 Conversation</h3>
+                  <div id="thread-content"></div>
+                  
+                  <div id="response-form" style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #e1e8ed;">
+                      <h4 style="margin-bottom: 10px; color: #f39c12;">🔄 HQ is asking for more information</h4>
+                      <div class="form-group">
+                          <textarea id="thread-response" placeholder="Provide the additional information requested..." rows="4"></textarea>
+                      </div>
+                      <div style="display: flex; gap: 10px;">
+                          <button id="submit-response-btn" class="btn btn-primary" style="width: auto;">Send Response</button>
+                          <button id="cancel-response-btn" class="btn btn-secondary" style="width: auto;">Cancel</button>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+  
+  <!-- Toast Notifications -->
+  <div id="error-toast" class="toast error" style="display: none;">
+      <span id="error-message"></span>
+      <button class="toast-close">&times;</button>
+  </div>
+  
+  <div id="success-toast" class="toast success" style="display: none;">
+      <span id="success-message"></span>
+      <button class="toast-close">&times;</button>
+  </div>
+  </body>
+  </html>
