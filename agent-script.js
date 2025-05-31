@@ -586,4 +586,3 @@ class AgentPortalApp {
 document.addEventListener('DOMContentLoaded', () => {
     window.app = new AgentPortalApp();
 });
-</script>
