@@ -57,7 +57,9 @@ class AgentPortalApp {
     
     renderUserButtons() {
         const container = document.getElementById('user-buttons');
-        container.innerHTML = this.agents.map(name => 
+        const availableUsers = this.agents || this.hqTeam.filter(name => name !== 'Anyone');
+        
+        container.innerHTML = availableUsers.map(name => 
             `<button class="user-btn" onclick="app.setCurrentUser('${name}')">${name}</button>`
         ).join('');
     }
