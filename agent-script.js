@@ -63,12 +63,31 @@ class AgentPortalApp {
     }
     
     setCurrentUser(userName) {
-        this.currentUser = userName;
-        localStorage.setItem(CONFIG.STORAGE_KEYS.CURRENT_USER, userName);
-        localStorage.setItem(CONFIG.STORAGE_KEYS.LOGIN_STATUS, 'true');
-        this.showApp();
-        this.loadData();
-        UTILS.showToast(`Welcome, ${userName}!`);
+        // Find the clicked button and show loading state
+        const clickedBtn = event.target;
+        const allBtns = document.querySelectorAll('.user-btn');
+        
+        // Disable all buttons and show loading on clicked one
+        allBtns.forEach(btn => {
+            btn.disabled = true;
+            if (btn === clickedBtn) {
+                this.setButtonLoading(btn, true, 'Loading...');
+            } else {
+                btn.style.opacity = '0.5';
+            }
+        });
+        
+        UTILS.showToast(`Setting up ${userName}'s workspace...`, 'info');
+        
+        // Small delay to show the loading state, then proceed
+        setTimeout(() => {
+            this.currentUser = userName;
+            localStorage.setItem(CONFIG.STORAGE_KEYS.CURRENT_USER, userName);
+            localStorage.setItem(CONFIG.STORAGE_KEYS.LOGIN_STATUS, 'true');
+            this.showApp();
+            this.loadData(); // This will show "Loading data..." 
+            UTILS.showToast(`Welcome, ${userName}!`);
+        }, 500);
     }
     
     updateUserHeader() {
@@ -77,13 +96,26 @@ class AgentPortalApp {
     }
     
     handleLogin(password) {
+        const loginBtn = document.querySelector('#login-form button[type="submit"]');
+        const loginForm = document.getElementById('login-form');
+        
+        this.setButtonLoading(loginBtn, true, 'Checking...');
+        this.setFormLoading(loginForm, true);
+        UTILS.showToast('Verifying password...', 'info');
+        
         if (password === CONFIG.PASSWORD) {
+            UTILS.showToast('Loading team data...', 'info');
             this.loadTeamData().then(() => {
+                this.setButtonLoading(loginBtn, false);
+                this.setFormLoading(loginForm, false);
                 this.showUserSelection();
+                UTILS.showToast('Welcome! Please select your name.');
             });
             document.getElementById('login-error').style.display = 'none';
             return true;
         } else {
+            this.setButtonLoading(loginBtn, false);
+            this.setFormLoading(loginForm, false);
             document.getElementById('login-error').style.display = 'block';
             document.getElementById('password').value = '';
             document.getElementById('password').focus();
@@ -131,7 +163,9 @@ class AgentPortalApp {
     // Data Loading
     async loadTeamData() {
         try {
+            UTILS.showToast('Loading team information...', 'info');
             const data = await this.loadWithJsonp(`${CONFIG.API_URL}?action=getAgentData`);
+            
             if (data.success) {
                 this.hqTeam = data.hqTeam || ['Nick', 'Minal', 'Sarju', 'Anyone'];
                 this.agents = data.agents || ['Amit', 'Ankit', 'Ankita'];
@@ -139,11 +173,12 @@ class AgentPortalApp {
             }
         } catch (error) {
             console.error('Error loading team data:', error);
+            UTILS.showToast('Could not load team data, using defaults', 'error');
             this.hqTeam = ['Nick', 'Minal', 'Sarju', 'Anyone'];
             this.agents = ['Amit', 'Ankit', 'Ankita'];
             this.populateHQDropdown();
         }
-    }
+    }    
     
     async loadData() {
         const refreshBtn = document.getElementById('refresh-btn');
