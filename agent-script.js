@@ -101,6 +101,32 @@ class AgentPortalApp {
             clearInterval(this.refreshTimer);
         }
     }
+
+    setButtonLoading(buttonElement, loading, originalText = null) {
+        if (loading) {
+            if (!buttonElement.dataset.originalText) {
+                buttonElement.dataset.originalText = buttonElement.textContent;
+            }
+            buttonElement.classList.add('loading');
+            buttonElement.disabled = true;
+            if (originalText) buttonElement.textContent = originalText;
+        } else {
+            buttonElement.classList.remove('loading');
+            buttonElement.disabled = false;
+            if (buttonElement.dataset.originalText) {
+                buttonElement.textContent = buttonElement.dataset.originalText;
+                delete buttonElement.dataset.originalText;
+            }
+        }
+    }
+    
+    setFormLoading(formElement, loading) {
+        if (loading) {
+            formElement.classList.add('form-loading');
+        } else {
+            formElement.classList.remove('form-loading');
+        }
+    }
     
     // Data Loading
     async loadTeamData() {
@@ -121,12 +147,11 @@ class AgentPortalApp {
     
     async loadData() {
         const refreshBtn = document.getElementById('refresh-btn');
-            if (refreshBtn) {
-                refreshBtn.classList.add('loading');
-                refreshBtn.disabled = true;
-        }
+        if (refreshBtn) this.setButtonLoading(refreshBtn, true);
+        
         try {
             this.showLoading(true);
+            UTILS.showToast('Loading data...', 'info');
             
             const data = await this.loadWithJsonp(`${CONFIG.API_URL}?action=getAgentData`);
             
@@ -140,9 +165,7 @@ class AgentPortalApp {
                 this.updateStats();
                 this.updateLastUpdated();
                 
-                // Cache data
                 localStorage.setItem(CONFIG.STORAGE_KEYS.CACHED_DATA, JSON.stringify(this.questions));
-                
                 UTILS.showToast('Data loaded successfully');
             } else {
                 throw new Error(data.error || 'Failed to load data');
@@ -154,9 +177,7 @@ class AgentPortalApp {
             UTILS.showToast('Failed to load data. Showing cached data.', 'error');
         } finally {
             this.showLoading(false);
-            if (refreshBtn) {
-            refreshBtn.classList.remove('loading');
-            refreshBtn.disabled = false;
+            if (refreshBtn) this.setButtonLoading(refreshBtn, false);
         }
     }
     
@@ -418,11 +439,12 @@ class AgentPortalApp {
     
     // Form Submission
     async submitQuestion() {
-        UTILS.showToast('Submitting question...', 'info');
-        const form = document.getElementById('question-form');
-        const formData = new FormData(form);
         const submitBtn = document.querySelector('#question-form button[type="submit"]');
-        const originalText = submitBtn.textContent;
+        const form = document.getElementById('question-form');
+        
+        this.setButtonLoading(submitBtn, true, 'Submitting...');
+        this.setFormLoading(form, true);
+        UTILS.showToast('Submitting question...', 'info');
         
         const questionData = {
             property: document.getElementById('property').value.trim(),
@@ -433,22 +455,17 @@ class AgentPortalApp {
             askedBy: this.currentUser
         };
         
-        // Validate required fields
         if (!questionData.property || !questionData.priority || !questionData.question || !questionData.directedTo) {
             UTILS.showToast('Please fill in all required fields', 'error');
+            this.setButtonLoading(submitBtn, false);
+            this.setFormLoading(form, false);
             return;
         }
-
-        submitBtn.classList.add('loading');
-        submitBtn.textContent = 'Submitting...';
-        submitBtn.disabled = true;
         
         try {
             const response = await fetch(CONFIG.API_URL, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: new URLSearchParams({
                     action: 'submitQuestion',
                     ...questionData
@@ -460,7 +477,7 @@ class AgentPortalApp {
             if (data.success) {
                 UTILS.showToast('Question submitted successfully!');
                 form.reset();
-                this.loadData(); // Refresh questions
+                this.loadData();
             } else {
                 throw new Error(data.error || 'Failed to submit question');
             }
@@ -469,34 +486,28 @@ class AgentPortalApp {
             console.error('Error submitting question:', error);
             UTILS.showToast('Failed to submit question', 'error');
         } finally {
-            // Reset button state
-            submitBtn.classList.remove('loading');
-            submitBtn.textContent = originalText;
-            submitBtn.disabled = false;
+            this.setButtonLoading(submitBtn, false);
+            this.setFormLoading(form, false);
         }
     }
     
     async submitThreadResponse() {
-        if (!this.currentQuestion) return;
-        UTILS.showToast('Submitting question...', 'info');
-        const responseText = document.getElementById('thread-response').value.trim();
         const submitBtn = document.getElementById('submit-response-btn');
-        const originalText = submitBtn.textContent;
+        this.setButtonLoading(submitBtn, true, 'Sending...');
+        UTILS.showToast('Sending response...', 'info');
+        
+        const responseText = document.getElementById('thread-response').value.trim();
         
         if (!responseText) {
             UTILS.showToast('Please enter a response', 'error');
+            this.setButtonLoading(submitBtn, false);
             return;
         }
-        submitBtn.classList.add('loading');
-        submitBtn.textContent = 'Sending...';
-        submitBtn.disabled = true;
         
         try {
             const response = await fetch(CONFIG.API_URL, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: new URLSearchParams({
                     action: 'respondToThread',
                     questionId: this.currentQuestion.id,
@@ -519,10 +530,7 @@ class AgentPortalApp {
             console.error('Error sending response:', error);
             UTILS.showToast('Failed to send response', 'error');
         } finally {
-            // Reset button state
-            submitBtn.classList.remove('loading');
-            submitBtn.textContent = originalText;
-            submitBtn.disabled = false;
+            this.setButtonLoading(submitBtn, false);
         }
     }
     
